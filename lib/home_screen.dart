@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main.dart'
-;
+import 'main.dart';
+import 'profile.dart';
+
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -183,13 +184,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
 // ==================== HOME SCREEN CONTENT ====================
 
-class HomeContent extends StatelessWidget {
-  Future<void> _logout(BuildContext context) async {
-    // Supprimer le token de session
+class HomeContent extends StatefulWidget {
+  @override
+  _HomeContentState createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token'); // Supprime le token enregistré
 
-    // Rediriger vers la page de connexion
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -214,15 +218,16 @@ class HomeContent extends StatelessWidget {
               leading: Icon(Icons.person, color: Colors.white),
               title: Text('Profile', style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileScreen()),
+                );
               },
             ),
             ListTile(
               leading: Icon(Icons.logout, color: Colors.white),
               title: Text('Déconnexion', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                _logout(context); // Appeler la fonction de déconnexion
-              },
+              onTap: _logout,
             ),
           ],
         ),
