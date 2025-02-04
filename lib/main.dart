@@ -1,18 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'home_screen.dart'; // Assurez-vous que ce fichier existe avec HomeScreen()
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus();
+  }
+
+  Future<void> checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    setState(() {
+      isLoggedIn = token != null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      home: isLoggedIn ? HomeScreen() : LoginScreen(),
     );
   }
 }
@@ -26,55 +50,64 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
+  String? errorMessage;
 
   Future<void> login() async {
     setState(() {
       isLoading = true;
+      errorMessage = null;
     });
 
-    final response = await http.post(
-      Uri.parse('http://localhost:1234/user/checkUser'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': emailController.text,
-        'mot_de_passe': passwordController.text, // Vérifie que le champ correspond à ton backend
-      }),
-    );
-
-    setState(() {
-      isLoading = false;
-    });
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-
-      // Affichage du token et de l'ID utilisateur dans la console
-      print("Token: ${data['token']}");
-      print("User ID: ${data['userId']}");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Connexion réussie')),
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:1234/user/checkUser'), // Remplace par l'URL de ton backend
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': emailController.text,
+          'mot_de_passe': passwordController.text,
+        }),
       );
 
-      // Redirection vers la page d'accueil
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Échec de la connexion')),
-      );
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        // Stocke le token avec SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', data['token']);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connexion réussie')),
+        );
+
+        // Redirige vers la page d'accueil
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        setState(() {
+          errorMessage = "Email ou mot de passe incorrect.";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = "Erreur de connexion. Vérifie ta connexion Internet.";
+        isLoading = false;
+      });
     }
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.purple, Colors.pink],
+            colors: [Colors.deepPurple, Colors.purpleAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -98,9 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Image logo supprimée
+                  Icon(Icons.lock, size: 80, color: Colors.purple),
+                  SizedBox(height: 10),
                   Text(
-                    'MobileApp',
+                    'Connexion',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -112,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: emailController,
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.email, color: Colors.purple),
-                      labelText: 'Email Address',
+                      labelText: 'Email',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -124,13 +158,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: passwordController,
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.lock, color: Colors.purple),
-                      labelText: 'Password',
+                      labelText: 'Mot de passe',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                     obscureText: true,
                   ),
+                  SizedBox(height: 10),
+                  if (errorMessage != null)
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(color: Colors.red, fontSize: 14),
+                    ),
                   SizedBox(height: 20),
                   isLoading
                       ? CircularProgressIndicator()
@@ -145,10 +185,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           child: Text(
-                            'Login',  // Texte changé de 'Sign Up' à 'Login'
+                            'Se connecter',
                             style: TextStyle(fontSize: 18, color: Colors.white),
                           ),
                         ),
+                  SizedBox(height: 10),
                 ],
               ),
             ),
