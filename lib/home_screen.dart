@@ -12,7 +12,7 @@ void main() {
   ));
 }
 
-// ==================== RESERVATION SCREEN ====================
+
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -94,14 +94,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple, // Adjust to your preferred color
-        title: Text('Historique', style: TextStyle(color: Colors.white)), // Title: Historique
-        automaticallyImplyLeading: false, // Removes the back button
+        backgroundColor: Colors.deepPurple,
+        title: Text('Historique', style: TextStyle(color: Colors.white)),
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent], // Gradient for background
+            colors: [Colors.deepPurple, Colors.purpleAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -120,9 +120,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           margin: EdgeInsets.symmetric(vertical: 8),
                           padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white, // White background for each video box
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.black), // Black border
+                            border: Border.all(color: Colors.black),
                             boxShadow: [
                               BoxShadow(color: Colors.black54, blurRadius: 4, spreadRadius: 2),
                             ],
@@ -135,7 +135,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
                               ),
                               SizedBox(height: 8),
-                              // Date display with a new line between dateDebut and dateFin
                               Row(
                                 children: [
                                   Icon(Icons.date_range, color: Colors.black, size: 16),
@@ -178,6 +177,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   ),
                                 ],
                               ),
+                              SizedBox(height: 10),
+                              // Button to reserve
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Handle reservation action
+                                  // Example: Navigate to reservation screen or perform reservation logic
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => ReservationScreen(video: video)),
+                                  );
+                                },
+                                child: Text('Réserver'),
+                              ),
                             ],
                           ),
                         );
@@ -210,6 +222,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
+
 // ==================== HOME SCREEN CONTENT ====================
 
 class HomeContent extends StatefulWidget {
@@ -308,6 +321,48 @@ class _HomeContentState extends State<HomeContent> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class ReservationScreen extends StatelessWidget {
+  final dynamic video;
+
+  ReservationScreen({required this.video});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Réserver une séance'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Description: ${video['description']}',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 10),
+            Text('Date: Du ${video['dateDebut']} au ${video['dateFin']}'),
+            SizedBox(height: 10),
+            Text('Lieu: ${video['lieu']}'),
+            SizedBox(height: 10),
+            Text('Places disponibles: ${video['nombrePlaces']}'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Handle reservation logic here
+                print('Réservation confirmée pour: ${video['description']}');
+              },
+              child: Text('Confirmer la réservation'),
+            ),
+          ],
+        ),
       ),
     );
   }
