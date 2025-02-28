@@ -12,6 +12,8 @@ void main() {
   ));
 }
 
+// ==================== RESERVATION SCREEN ====================
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -22,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     HistoryScreen(),
     HomeContent(),
-    Center(child: Text('Tchat', style: TextStyle(color: Colors.white, fontSize: 24))),
+    Center(child: Text('Test', style: TextStyle(color: Colors.white, fontSize: 24))),
   ];
 
   @override
@@ -36,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historique'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Tchat'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Réservation'),
         ],
         currentIndex: _currentIndex,
         onTap: (int index) {
@@ -48,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
 
 // ==================== HISTORIQUE SCREEN ====================
 
@@ -88,100 +92,124 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      padding: EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Expanded(
-            child: _videos.isEmpty
-                ? Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _filteredVideos().length,
-                    itemBuilder: (context, index) {
-                      var video = _filteredVideos()[index];
-                      return Container(
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[900],
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black54, blurRadius: 4, spreadRadius: 2),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              video['description'] ?? 'Description indisponible',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.date_range, color: Colors.white, size: 16),
-                                SizedBox(width: 5),
-                                Text(
-                                  "Du ${video['dateDebut'] ?? 'N/A'} au ${video['dateFin'] ?? 'N/A'}",
-                                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Row(
-                              children: [
-                                Icon(Icons.location_on, color: Colors.white, size: 16),
-                                SizedBox(width: 5),
-                                Text(
-                                  video['lieu'] ?? 'Lieu non spécifié',
-                                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Row(
-                              children: [
-                                Icon(Icons.event_seat, color: Colors.white, size: 16),
-                                SizedBox(width: 5),
-                                Text(
-                                  "Places disponibles: ${video['nombrePlaces'] ?? 'N/A'}",
-                                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple, // Adjust to your preferred color
+        title: Text('Historique', style: TextStyle(color: Colors.white)), // Title: Historique
+        automaticallyImplyLeading: false, // Removes the back button
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple, Colors.purpleAccent], // Gradient for background
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Rechercher...',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (text) {
-                setState(() {
-                  _searchText = text;
-                });
-              },
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Expanded(
+              child: _videos.isEmpty
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _filteredVideos().length,
+                      itemBuilder: (context, index) {
+                        var video = _filteredVideos()[index];
+                        return Container(
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white, // White background for each video box
+                            borderRadius: BorderRadius.circular(15),
+                            border: Border.all(color: Colors.black), // Black border
+                            boxShadow: [
+                              BoxShadow(color: Colors.black54, blurRadius: 4, spreadRadius: 2),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                video['description'] ?? 'Description indisponible',
+                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                              ),
+                              SizedBox(height: 8),
+                              // Date display with a new line between dateDebut and dateFin
+                              Row(
+                                children: [
+                                  Icon(Icons.date_range, color: Colors.black, size: 16),
+                                  SizedBox(width: 5),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Du ${video['dateDebut'] ?? 'N/A'}",
+                                        style: TextStyle(color: Colors.black, fontSize: 14),
+                                      ),
+                                      SizedBox(height: 5),
+                                      Text(
+                                        "au ${video['dateFin'] ?? 'N/A'}",
+                                        style: TextStyle(color: Colors.black, fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on, color: Colors.black, size: 16),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    video['lieu'] ?? 'Lieu non spécifié',
+                                    style: TextStyle(color: Colors.black, fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.event_seat, color: Colors.black, size: 16),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    "Places disponibles: ${video['nombrePlaces'] ?? 'N/A'}",
+                                    style: TextStyle(color: Colors.black, fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
             ),
-          ),
-          SizedBox(height: 16),
-        ],
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Rechercher...',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: (text) {
+                  setState(() {
+                    _searchText = text;
+                  });
+                },
+              ),
+            ),
+            SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
 }
-
 // ==================== HOME SCREEN CONTENT ====================
 
 class HomeContent extends StatefulWidget {
