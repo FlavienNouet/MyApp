@@ -4,22 +4,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class CompteApi {
-  static const String baseUrl = 'http://localhost:1234';
+  // URL mise à jour pour le serveur local dans un environnement Android
+  static String baseUrl = 'http://10.0.2.2:1234/';
 
-  static Future<Map<String, dynamic>> getUserById(int id) async {
+  // Récupération des données du compte
+  static Future<Map<String, dynamic>> getUserById(String userId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/user/getUserById?id=$id'),
+      var res = await http.get(
+        Uri.parse(baseUrl + '/user/getUserById?id=$userId'),
         headers: {'Content-Type': 'application/json'},
       );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
       } else {
-        throw Exception('Utilisateur non trouvé');
+        throw Exception('Erreur lors de la récupération des données du compte.');
       }
-    } catch (error) {
-      throw Exception('Erreur de connexion : ${error.toString()}');
+    } catch (err) {
+      throw Exception(err.toString());
     }
   }
 }
@@ -30,8 +32,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // Déclaration de futureUser et userId
   Future<Map<String, dynamic>>? _futureUser;
-  int? _userId;
+  String? _userId;
 
   @override
   void initState() {
@@ -39,13 +42,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserId();
   }
 
+  // Fonction pour charger l'ID utilisateur depuis les SharedPreferences
   Future<void> _loadUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? storedUserId = prefs.getInt('userId') ?? 1; // Défaut ID 3 si absent
+    String storedUserId = prefs.getString('userId') ?? '1'; // Défaut à ID '1' si absent
 
     setState(() {
       _userId = storedUserId;
-      _futureUser = CompteApi.getUserById(_userId!);
+      _futureUser = CompteApi.getUserById(_userId!); // Utilisation de l'ID utilisateur dynamique
     });
   }
 
@@ -74,7 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('ID: ${_userId}', style: TextStyle(fontSize: 20, color: Colors.white)),
+                      Text('ID: $_userId', style: TextStyle(fontSize: 20, color: Colors.white)),
                       Text('Nom: ${user['nom'] ?? "Inconnu"}', style: TextStyle(fontSize: 24, color: Colors.white)),
                       Text('Email: ${user['email'] ?? "Non défini"}', style: TextStyle(fontSize: 18, color: Colors.white)),
                     ],
@@ -85,4 +89,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.black,
     );
   }
-}  
+}

@@ -136,7 +136,13 @@ class VideoItem extends StatelessWidget {
             children: [
               Icon(Icons.date_range, color: Colors.black, size: 16),
               SizedBox(width: 5),
-              Text("Du ${video['dateDebut'] ?? 'N/A'} au ${video['dateFin'] ?? 'N/A'}", style: TextStyle(color: Colors.black, fontSize: 14)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Du ${video['dateDebut'] ?? 'N/A'}", style: TextStyle(color: Colors.black, fontSize: 14)),
+                  Text("au ${video['dateFin'] ?? 'N/A'}", style: TextStyle(color: Colors.black, fontSize: 14)),
+                ],
+              ),
             ],
           ),
           SizedBox(height: 5),

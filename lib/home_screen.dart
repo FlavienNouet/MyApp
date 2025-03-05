@@ -107,53 +107,62 @@ class _HomeContentState extends State<HomeContent> {
           ],
         ),
       ),
-      body: Stack(
-        children: [
-          Container(color: Colors.black),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Builder(
-                      builder: (context) => GestureDetector(
-                        onTap: () {
-                          Scaffold.of(context).openDrawer(); // Ouvre le menu latéral
-                        },
-                        child: CircleAvatar(
-                          radius: 20,
-                          backgroundImage: AssetImage('../assets/profile.jpg'), // Image de profil
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple, Colors.purpleAccent], // Application du dégradé
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Container(color: Colors.transparent), // Utilisation de la couleur transparente
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 50),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Builder(
+                        builder: (context) => GestureDetector(
+                          onTap: () {
+                            Scaffold.of(context).openDrawer(); // Ouvre le menu latéral
+                          },
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundImage: AssetImage('../assets/profile.jpg'), // Image de profil
+                          ),
                         ),
                       ),
-                    ),
-                    Spacer(),
-                    Text('Dayliho', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-                  ],
-                ),
-                SizedBox(height: 50),
-                Container(
-                  width: 300,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    image: DecorationImage(
-                      image: AssetImage('../assets/home.jpg'), // Image de fond
-                      fit: BoxFit.cover,
+                      Spacer(),
+                      Text('Dayliho', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
+                  ),
+                  SizedBox(height: 50),
+                  Container(
+                    width: 300,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image: AssetImage('../assets/home.jpg'), // Image de fond
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)), // Bouton d'accueil
-                ),
-              ],
+                  SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: () {},
+                    child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)), // Bouton d'accueil
+                    
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-
