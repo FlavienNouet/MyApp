@@ -52,7 +52,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
-        title: Text('Historique', style: TextStyle(color: Colors.white)),
+        title: Text('Liste des Séances', style: TextStyle(color: Colors.white)),
         automaticallyImplyLeading: false, // Désactive le bouton de retour automatique
       ),
       body: Container(

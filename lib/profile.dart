@@ -3,90 +3,128 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-class CompteApi {
-  // URL mise à jour pour le serveur local dans un environnement Android
-  static String baseUrl = 'http://10.0.2.2:1234/';
-
-  // Récupération des données du compte
-  static Future<Map<String, dynamic>> getUserById(String userId) async {
-    try {
-      var res = await http.get(
-        Uri.parse(baseUrl + '/user/getUserById?id=$userId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body);
-      } else {
-        throw Exception('Erreur lors de la récupération des données du compte.');
-      }
-    } catch (err) {
-      throw Exception(err.toString());
-    }
-  }
-}
-
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Déclaration de futureUser et userId
-  Future<Map<String, dynamic>>? _futureUser;
-  String? _userId;
+  String username = '';
+  String email = '';
+  String role = '';
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserId();
+    fetchUserInfo();
   }
 
-  // Fonction pour charger l'ID utilisateur depuis les SharedPreferences
-  Future<void> _loadUserId() async {
+  // Fonction pour récupérer les informations de l'utilisateur
+  Future<void> fetchUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String storedUserId = prefs.getString('userId') ?? '1'; // Défaut à ID '1' si absent
+    String? token = prefs.getString('token');
 
-    setState(() {
-      _userId = storedUserId;
-      _futureUser = CompteApi.getUserById(_userId!); // Utilisation de l'ID utilisateur dynamique
-    });
+    if (token != null) {
+      try {
+        var userId = 2; // Vous pouvez adapter cela pour obtenir l'ID réel de l'utilisateur connecté.
+        final response = await http.get(
+          Uri.parse('http://localhost:1234/user/getUserById?id=$userId'), // Endpoint pour récupérer les infos du profil
+          headers: {'Authorization': 'Bearer $token'},
+        );
+
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> userData = jsonDecode(response.body);
+
+          // Debug : affiche la réponse brute pour comprendre sa structure
+          print('Réponse brute de l\'API: $userData');
+
+          // Debug supplémentaire : inspecter toutes les clés disponibles dans la réponse JSON
+          userData.forEach((key, value) {
+            print('Clé: $key, Valeur: $value');
+          });
+
+          // Vérifier si 'user' existe
+          if (userData.containsKey('user')) {
+            var currentUser = userData['user'];
+
+            if (currentUser != null) {
+              setState(() {
+                username = '${currentUser['nom']} ${currentUser['prenom']}'; // Combinaison nom et prénom
+                email = currentUser['email'] ?? ''; // Email
+                role = currentUser['role'] ?? '';   // Rôle
+                isLoading = false;
+              });
+            } else {
+              setState(() {
+                errorMessage = 'Utilisateur non trouvé';
+                isLoading = false;
+              });
+            }
+          } else {
+            // Si 'user' n'est pas dans la réponse, afficher un message plus détaillé
+            setState(() {
+              errorMessage = 'Données utilisateur manquantes. Réponse de l\'API: ${response.body}';
+              isLoading = false;
+            });
+          }
+        } else {
+          setState(() {
+            errorMessage = 'Erreur de réponse: ${response.statusCode}';
+            isLoading = false;
+          });
+        }
+      } catch (e) {
+        setState(() {
+          errorMessage = 'Erreur de communication avec le serveur: $e';
+          isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        errorMessage = 'Aucun token trouvé dans les préférences partagées';
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profil Utilisateur'),
-        backgroundColor: Colors.black,
+        title: Text('Profil'),
       ),
       body: Center(
-        child: _futureUser == null
-            ? Text('Chargement...', style: TextStyle(color: Colors.white))
-            : FutureBuilder<Map<String, dynamic>>(
-                future: _futureUser,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Erreur: ${snapshot.error}', style: TextStyle(color: Colors.white));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text('Aucune donnée trouvée', style: TextStyle(color: Colors.white));
-                  }
-
-                  final user = snapshot.data!;
-                  return Column(
+        child: isLoading
+            ? CircularProgressIndicator() // Affiche un loader pendant le chargement
+            : errorMessage.isNotEmpty
+                ? Text(errorMessage, style: TextStyle(color: Colors.red)) // Affiche un message d'erreur si nécessaire
+                : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('ID: $_userId', style: TextStyle(fontSize: 20, color: Colors.white)),
-                      Text('Nom: ${user['nom'] ?? "Inconnu"}', style: TextStyle(fontSize: 24, color: Colors.white)),
-                      Text('Email: ${user['email'] ?? "Non défini"}', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    children: <Widget>[
+                      Text(
+                        'Informations utilisateur:',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        'Nom d\'utilisateur: $username',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Email: $email',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Rôle: $role',
+                        style: TextStyle(fontSize: 18),
+                      ),
                     ],
-                  );
-                },
-              ),
+                  ),
       ),
-      backgroundColor: Colors.black,
     );
   }
 }

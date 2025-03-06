@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'historique.dart';
-import 'reserv.dart';// Import des écrans
-import 'main.dart'; // Assurez-vous d'importer votre écran principal
-import 'profile.dart';
-
 
 class ConfirmationScreen extends StatefulWidget {
   @override
@@ -14,50 +8,58 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  List<dynamic> _bookedSeances = [];
+  Future<List<dynamic>> fetchBookedSeances(int idUtilisateur) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:1234/user/getBookedSeances?id_utilisateur=$idUtilisateur'),
+      );
 
-  // Fonction pour récupérer les séances réservées
-  Future<void> getBookedSeances(int idUtilisateur) async {
-    final response = await http.get(
-      Uri.parse('http://localhost:1234/user/getBookedSeances?id_utilisateur=$idUtilisateur'),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _bookedSeances = json.decode(response.body); // Mise à jour des séances réservées
-      });
-    } else {
-      print('Erreur de récupération des séances réservées');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Erreur lors de la récupération des séances');
+      }
+    } catch (e) {
+      throw Exception('Impossible de se connecter au serveur');
     }
   }
 
   @override
-  void initState() {
-    super.initState();
-    int idUtilisateur = 1; // Remplacez ceci par l'ID de l'utilisateur
-    getBookedSeances(idUtilisateur); // Récupère les séances réservées à l'initialisation
-  }
-
-  @override
   Widget build(BuildContext context) {
+    int idUtilisateur = 1; // Remplace par l'ID réel de l'utilisateur
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Confirmation de Réservation'),
+        title: Text('Mes Réservations'),
         backgroundColor: Colors.black,
       ),
-      body: Center(
-        child: _bookedSeances.isEmpty
-            ? CircularProgressIndicator()
-            : ListView.builder(
-                itemCount: _bookedSeances.length,
-                itemBuilder: (context, index) {
-                  var seance = _bookedSeances[index];
-                  return ListTile(
-                    title: Text(seance['description']),
-                    subtitle: Text("Du ${seance['dateDebut']} au ${seance['dateFin']}"),
-                  );
-                },
-              ),
+      body: FutureBuilder<List<dynamic>>(
+        future: fetchBookedSeances(idUtilisateur),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Erreur : ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text("Aucune séance réservée"));
+          }
+
+          var seances = snapshot.data!;
+          return ListView.builder(
+            itemCount: seances.length,
+            itemBuilder: (context, index) {
+              var seance = seances[index];
+              return Card(
+                margin: EdgeInsets.all(10),
+                child: ListTile(
+                  title: Text(seance['description']),
+                  subtitle: Text("Du ${seance['dateDebut']} au ${seance['dateFin']}"),
+                  leading: Icon(Icons.fitness_center, color: Colors.deepPurple),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

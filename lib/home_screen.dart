@@ -40,9 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Historique'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Séances'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Réservation'),
+          BottomNavigationBarItem(icon: Icon(Icons.check_circle), label: 'Mes Réservations'),
         ],
         currentIndex: _currentIndex, // Index actuel dans la barre de navigation
         onTap: (int index) {
