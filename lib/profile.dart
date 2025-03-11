@@ -21,69 +21,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     fetchUserInfo();
   }
 
-  // Fonction pour récupérer les informations de l'utilisateur
   Future<void> fetchUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
+    String? userId = prefs.getString('userId');
 
-    if (token != null) {
-      try {
-        var userId = 2; // Vous pouvez adapter cela pour obtenir l'ID réel de l'utilisateur connecté.
-        final response = await http.get(
-          Uri.parse('http://localhost:1234/user/getUserById?id=$userId'), // Endpoint pour récupérer les infos du profil
-          headers: {'Authorization': 'Bearer $token'},
-        );
+    if (token == null || userId == null) {
+      setState(() {
+        errorMessage = 'Aucun token ou ID utilisateur trouvé';
+        isLoading = false;
+      });
+      return;
+    }
 
-        if (response.statusCode == 200) {
-          final Map<String, dynamic> userData = jsonDecode(response.body);
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:1234/user/getUserById?id=$userId'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
-          // Debug : affiche la réponse brute pour comprendre sa structure
-          print('Réponse brute de l\'API: $userData');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> userData = jsonDecode(response.body);
 
-          // Debug supplémentaire : inspecter toutes les clés disponibles dans la réponse JSON
-          userData.forEach((key, value) {
-            print('Clé: $key, Valeur: $value');
+        if (userData.containsKey('user') && userData['user'] != null) {
+          var currentUser = userData['user'];
+
+          String nom = currentUser['nom'] ?? '';
+          String prenom = currentUser['prenom'] ?? '';
+
+          setState(() {
+            username = (nom + ' ' + prenom).trim();
+            email = currentUser['email']?.toString() ?? 'Non renseigné';
+            role = currentUser['role']?.toString() ?? 'Non spécifié';
+            isLoading = false;
           });
-
-          // Vérifier si 'user' existe
-          if (userData.containsKey('user')) {
-            var currentUser = userData['user'];
-
-            if (currentUser != null) {
-              setState(() {
-                username = '${currentUser['nom']} ${currentUser['prenom']}'; // Combinaison nom et prénom
-                email = currentUser['email'] ?? ''; // Email
-                role = currentUser['role'] ?? '';   // Rôle
-                isLoading = false;
-              });
-            } else {
-              setState(() {
-                errorMessage = 'Utilisateur non trouvé';
-                isLoading = false;
-              });
-            }
-          } else {
-            // Si 'user' n'est pas dans la réponse, afficher un message plus détaillé
-            setState(() {
-              errorMessage = 'Données utilisateur manquantes. Réponse de l\'API: ${response.body}';
-              isLoading = false;
-            });
-          }
         } else {
           setState(() {
-            errorMessage = 'Erreur de réponse: ${response.statusCode}';
+            errorMessage = '${response.body}';
             isLoading = false;
           });
         }
-      } catch (e) {
+      } else {
         setState(() {
-          errorMessage = 'Erreur de communication avec le serveur: $e';
+          errorMessage = 'Erreur de réponse : ${response.statusCode}';
           isLoading = false;
         });
       }
-    } else {
+    } catch (e) {
       setState(() {
-        errorMessage = 'Aucun token trouvé dans les préférences partagées';
+        errorMessage = 'Erreur de communication avec le serveur';
         isLoading = false;
       });
     }
@@ -94,36 +80,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Profil'),
+        backgroundColor: Colors.deepPurple,
       ),
-      body: Center(
-        child: isLoading
-            ? CircularProgressIndicator() // Affiche un loader pendant le chargement
-            : errorMessage.isNotEmpty
-                ? Text(errorMessage, style: TextStyle(color: Colors.red)) // Affiche un message d'erreur si nécessaire
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        'Informations utilisateur:',
-                        style: TextStyle(fontSize: 20),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple, Colors.purpleAccent],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: isLoading
+              ? CircularProgressIndicator()
+              : errorMessage.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Text(
+                        errorMessage,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 20),
-                      Text(
-                        'Nom d\'utilisateur: $username',
-                        style: TextStyle(fontSize: 18),
+                    )
+                  : Container(
+                      width: 350,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Email: $email',
-                        style: TextStyle(fontSize: 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Center(
+                            child: Text(
+                              'Informations de l\'utilisateur',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          buildDetailRow(Icons.person, username),
+                          buildDetailRow(Icons.email, email),
+                          buildDetailRow(Icons.security, role),
+                          SizedBox(height: 25),
+                        ],
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Rôle: $role',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    ],
-                  ),
+                    ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildDetailRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.deepPurple, size: 24),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text.isNotEmpty ? text : 'Non renseigné',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

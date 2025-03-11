@@ -11,7 +11,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   Future<List<dynamic>> fetchBookedSeances(int idUtilisateur) async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:1234/user/getBookedSeances?id_utilisateur=$idUtilisateur'),
+        Uri.parse('http://localhost:1234/video/getBookedSeances?id_utilisateur=$idUtilisateur'),
       );
 
       if (response.statusCode == 200) {

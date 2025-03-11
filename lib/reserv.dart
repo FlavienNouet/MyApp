@@ -9,13 +9,12 @@ class ReservationScreen extends StatelessWidget {
   ReservationScreen({required this.video});
 
   Future<void> bookSeance(int idUtilisateur, int idSeance, BuildContext context) async {
-    final url = Uri.parse('http://localhost:1234/user/bookSeance');
+    final url = Uri.parse('http://localhost:1234/video/bookSeance/$idUtilisateur/$idSeance');
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'id_utilisateur': idUtilisateur, 'id_seance': idSeance}),
       );
 
       if (response.statusCode == 200) {
@@ -29,12 +28,12 @@ class ReservationScreen extends StatelessWidget {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la réservation')),
+          SnackBar(content: Text('Erreur lors de la réservation : ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Impossible de se connecter au serveur')),
+        SnackBar(content: Text('Impossible de se connecter au serveur. Vérifiez votre connexion.')),
       );
     }
   }
