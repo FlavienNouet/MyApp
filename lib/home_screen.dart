@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'historique.dart';
-import 'reserv.dart';// Import des écrans
+import 'reserv.dart'; // Import des écrans
 import 'main.dart'; // Assurez-vous d'importer votre écran principal
 import 'profile.dart'; // Assurez-vous d'importer votre écran de profil
 import 'confirmation.dart';
 
+// Ecran Principal avec la navigation
 void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -15,7 +16,6 @@ void main() {
   ));
 }
 
-// Ecran Principal avec la navigation
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -55,7 +55,59 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class ReservationItem extends StatelessWidget {
+  final dynamic seance;
 
+  ReservationItem({required this.seance});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.black),
+        boxShadow: [
+          BoxShadow(color: Colors.black54, blurRadius: 4, spreadRadius: 2),
+        ],
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              seance['description'] ?? 'Titre indisponible',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                // Navigation vers la page de confirmation avec les détails de la séance
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ConfirmationScreen(), // Passage des détails de la séance
+                  ),
+                );
+              },
+              child: Text("Voir le détail"),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // Ecran d'accueil avec le menu latéral
 class HomeContent extends StatefulWidget {
@@ -64,6 +116,41 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
+  late List<dynamic> seances = []; // List to store the fetched seances
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSeances(); // Fetch seances data on screen load
+  }
+
+  Future<void> fetchSeances() async {
+    try {
+      // Récupérer l'ID utilisateur depuis SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('userId');
+
+      if (userId == null) {
+        throw Exception('Utilisateur non trouvé');
+      }
+
+      // Utiliser l'ID utilisateur pour obtenir les réservations dynamiquement
+      final response = await http.get(
+        Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          seances = jsonDecode(response.body); // Mettre à jour la liste des séances
+        });
+      } else {
+        throw Exception('Échec de la récupération des séances');
+      }
+    } catch (e) {
+      print('Erreur : $e'); // Affiche l'erreur dans la console
+    }
+  }
+
   // Fonction de déconnexion
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -155,7 +242,16 @@ class _HomeContentState extends State<HomeContent> {
                   ElevatedButton(
                     onPressed: () {},
                     child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)), // Bouton d'accueil
-                    
+                  ),
+                  SizedBox(height: 20),
+                  // Display the list of reservation items
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: seances.length,
+                      itemBuilder: (context, index) {
+                        return ReservationItem(seance: seances[index]);
+                      },
+                    ),
                   ),
                 ],
               ),

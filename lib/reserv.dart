@@ -13,31 +13,37 @@ class ReservationScreen extends StatelessWidget {
     final url = Uri.parse('http://localhost:1234/video/bookSeance/$userId/$seanceId');
 
     try {
+      print("🔹 Envoi de la requête POST à : $url");
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
       );
 
+      print("🔹 Code de réponse : ${response.statusCode}");
+      print("🔹 Contenu de la réponse : ${response.body}");
+
       if (response.statusCode == 200) {
-        // 🔹 Stocke seanceId avec SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setInt('seanceId', seanceId);
+        print("✅ Séance $seanceId réservée avec succès pour l'utilisateur $userId");
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Séance réservée avec succès !')),
         );
 
-        // 🔹 Navigue vers ConfirmationScreen
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ConfirmationScreen()),
         );
       } else {
+        print("❌ Erreur lors de la réservation (Code ${response.statusCode}) : ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur lors de la réservation : ${response.body}')),
         );
       }
     } catch (e) {
+      print("🚨 Exception attrapée : $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Impossible de se connecter au serveur. Vérifiez votre connexion.')),
       );
