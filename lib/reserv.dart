@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'confirmation.dart';
 
 class ReservationScreen extends StatelessWidget {
@@ -8,8 +9,8 @@ class ReservationScreen extends StatelessWidget {
 
   ReservationScreen({required this.video});
 
-  Future<void> bookSeance(int idUtilisateur, int idSeance, BuildContext context) async {
-    final url = Uri.parse('http://localhost:1234/video/bookSeance/$idUtilisateur/$idSeance');
+  Future<void> bookSeance(int userId, int seanceId, BuildContext context) async {
+    final url = Uri.parse('http://localhost:1234/video/bookSeance/$userId/$seanceId');
 
     try {
       final response = await http.post(
@@ -18,10 +19,15 @@ class ReservationScreen extends StatelessWidget {
       );
 
       if (response.statusCode == 200) {
+        // 🔹 Stocke seanceId avec SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('seanceId', seanceId);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Séance réservée avec succès !')),
         );
 
+        // 🔹 Navigue vers ConfirmationScreen
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => ConfirmationScreen()),
@@ -40,7 +46,7 @@ class ReservationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int idUtilisateur = 1; // À remplacer avec l'ID utilisateur réel
+    int idUtilisateur = 1; // Remplace avec l'ID utilisateur réel
     int idSeance = video['id'];
 
     return Scaffold(

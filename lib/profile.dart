@@ -40,36 +40,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         headers: {'Authorization': 'Bearer $token'},
       );
 
+      // Imprimer la réponse brute pour le débogage
+      print('Réponse de l\'API: ${response.body}');
+
+      // Vérification du statut HTTP
       if (response.statusCode == 200) {
         final Map<String, dynamic> userData = jsonDecode(response.body);
 
-        if (userData.containsKey('user') && userData['user'] != null) {
-          var currentUser = userData['user'];
-
-          String nom = currentUser['nom'] ?? '';
-          String prenom = currentUser['prenom'] ?? '';
+        // Vérification que la réponse contient bien les données utilisateur
+        if (userData.isNotEmpty) {
+          String nom = userData['nom'] ?? 'Nom non renseigné';
+          String prenom = userData['prenom'] ?? 'Prénom non renseigné';
+          String email = userData['email'] ?? 'Non renseigné';
+          String role = userData['role'] ?? 'Non spécifié';
 
           setState(() {
             username = (nom + ' ' + prenom).trim();
-            email = currentUser['email']?.toString() ?? 'Non renseigné';
-            role = currentUser['role']?.toString() ?? 'Non spécifié';
+            this.email = email;
+            this.role = role;
             isLoading = false;
           });
         } else {
           setState(() {
-            errorMessage = '${response.body}';
+            errorMessage = 'Données utilisateur non trouvées dans la réponse';
             isLoading = false;
           });
         }
       } else {
         setState(() {
-          errorMessage = 'Erreur de réponse : ${response.statusCode}';
+          errorMessage = 'Erreur serveur : ${response.statusCode}';
           isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Erreur de communication avec le serveur';
+        errorMessage = 'Erreur de communication avec le serveur: $e';
         isLoading = false;
       });
     }

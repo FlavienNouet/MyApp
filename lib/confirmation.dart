@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   @override
@@ -8,10 +9,17 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  Future<List<dynamic>> fetchBookedSeances(int idUtilisateur) async {
+  Future<List<dynamic>> fetchBookedSeances() async {
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('userId');
+
+      if (userId == null) {
+        throw Exception('ID utilisateur introuvable');
+      }
+
       final response = await http.get(
-        Uri.parse('http://localhost:1234/video/getBookedSeances?id_utilisateur=$idUtilisateur'),
+        Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
       );
 
       if (response.statusCode == 200) {
@@ -26,15 +34,13 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int idUtilisateur = 1; // Remplace par l'ID réel de l'utilisateur
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Mes Réservations'),
         backgroundColor: Colors.black,
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: fetchBookedSeances(idUtilisateur),
+        future: fetchBookedSeances(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
