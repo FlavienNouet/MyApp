@@ -3,41 +3,36 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'reserv.dart';
-// Import des écrans
-import 'main.dart'; // Assurez-vous d'importer votre écran principal
-import 'profile.dart'; 
-import 'confirmation.dart';// Assurez-vous d'importer votre écran de profil
+import 'main.dart';
+import 'profile.dart';
+import 'confirmation.dart';
 
-
-// Ecran d'Historique
 class HistoryScreen extends StatefulWidget {
   @override
   _HistoryScreenState createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  List<dynamic> _videos = []; // Liste des vidéos
-  String _searchText = ''; // Texte de recherche
+  List<dynamic> _videos = [];
+  String _searchText = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchVideos(); // Récupère les vidéos au démarrage
+    _fetchVideos();
   }
 
-  // Fonction pour récupérer les vidéos depuis l'API
   Future<void> _fetchVideos() async {
     final response = await http.get(Uri.parse('http://localhost:1234/video/getVideos'));
     if (response.statusCode == 200) {
       setState(() {
-        _videos = json.decode(response.body); // Mise à jour des vidéos
+        _videos = json.decode(response.body);
       });
     } else {
       print('Erreur de chargement des vidéos');
     }
   }
 
-  // Filtre les vidéos selon le texte de recherche
   List<dynamic> _filteredVideos() {
     if (_searchText.isEmpty) {
       return _videos;
@@ -53,7 +48,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.deepPurple,
         title: Text('Liste des Séances', style: TextStyle(color: Colors.white)),
-        automaticallyImplyLeading: false, // Désactive le bouton de retour automatique
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -68,16 +63,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             Expanded(
               child: _videos.isEmpty
-                  ? Center(child: CircularProgressIndicator()) // Affiche un indicateur de chargement
+                  ? Center(child: CircularProgressIndicator())
                   : ListView.builder(
                       itemCount: _filteredVideos().length,
                       itemBuilder: (context, index) {
                         var video = _filteredVideos()[index];
-                        return VideoItem(video: video); // Utilisation d'un widget séparé pour chaque vidéo
+                        return VideoItem(video: video);
                       },
                     ),
             ),
-            // Barre de recherche
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
@@ -92,7 +86,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 onChanged: (text) {
                   setState(() {
-                    _searchText = text; // Met à jour le texte de recherche
+                    _searchText = text;
                   });
                 },
               ),
@@ -105,7 +99,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-// Widget pour afficher une vidéo dans la liste
 class VideoItem extends StatelessWidget {
   final dynamic video;
 
@@ -128,10 +121,23 @@ class VideoItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            video['description'] ?? 'Description indisponible',
+            video['titre'] ?? 'Titre indisponible',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
           ),
           SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.fitness_center, color: Colors.black, size: 16),
+              SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  video['description'] ?? 'Description indisponible',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
           Row(
             children: [
               Icon(Icons.date_range, color: Colors.black, size: 16),
@@ -166,7 +172,7 @@ class VideoItem extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ReservationScreen(video: video)), // Redirection vers l'écran de réservation
+                MaterialPageRoute(builder: (context) => ReservationScreen(video: video)),
               );
             },
             child: Text('Réserver'),

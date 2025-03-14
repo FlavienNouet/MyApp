@@ -78,19 +78,24 @@ class ReservationItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // **Titre en haut**
             Text(
-              seance['description'] ?? 'Titre indisponible',
+              seance['titre'] ?? 'Titre indisponible',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 8),
+      
+          
+
+            // **Bouton Voir le détail**
             ElevatedButton(
               onPressed: () {
                 // Navigation vers la page de confirmation avec les détails de la séance
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ConfirmationScreen(), // Passage des détails de la séance
+                    builder: (context) => ConfirmationScreen(),
                   ),
                 );
               },

@@ -97,11 +97,27 @@ class ReservationItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Titre en haut
           Text(
-            seance['description'] ?? 'Description indisponible',
+            seance['titre'] ?? 'Titre indisponible',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
           ),
           SizedBox(height: 8),
+          // Description sous le titre
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.fitness_center, color: Colors.black, size: 16), // Icône d'haltère
+              SizedBox(width: 5), // Espace entre l'icône et le texte
+              Expanded(
+                child: Text(
+                  seance['description'] ?? 'Description indisponible',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          // Date de début et de fin
           Row(
             children: [
               Icon(Icons.date_range, color: Colors.black, size: 16),
@@ -116,6 +132,7 @@ class ReservationItem extends StatelessWidget {
             ],
           ),
           SizedBox(height: 5),
+          // Lieu
           Row(
             children: [
               Icon(Icons.location_on, color: Colors.black, size: 16),
@@ -124,6 +141,7 @@ class ReservationItem extends StatelessWidget {
             ],
           ),
           SizedBox(height: 5),
+          // Nombre de places
           Row(
             children: [
               Icon(Icons.event_seat, color: Colors.black, size: 16),
