@@ -109,24 +109,22 @@ class ReservationItem extends StatelessWidget {
   }
 }
 
-// Ecran d'accueil avec le menu latéral
 class HomeContent extends StatefulWidget {
   @override
   _HomeContentState createState() => _HomeContentState();
 }
 
 class _HomeContentState extends State<HomeContent> {
-  late List<dynamic> seances = []; // List to store the fetched seances
+  late List<dynamic> seances = []; // Liste des séances
 
   @override
   void initState() {
     super.initState();
-    fetchSeances(); // Fetch seances data on screen load
+    fetchSeances();
   }
 
   Future<void> fetchSeances() async {
     try {
-      // Récupérer l'ID utilisateur depuis SharedPreferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? userId = prefs.getString('userId');
 
@@ -134,31 +132,29 @@ class _HomeContentState extends State<HomeContent> {
         throw Exception('Utilisateur non trouvé');
       }
 
-      // Utiliser l'ID utilisateur pour obtenir les réservations dynamiquement
       final response = await http.get(
         Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
       );
 
       if (response.statusCode == 200) {
         setState(() {
-          seances = jsonDecode(response.body); // Mettre à jour la liste des séances
+          seances = jsonDecode(response.body);
         });
       } else {
         throw Exception('Échec de la récupération des séances');
       }
     } catch (e) {
-      print('Erreur : $e'); // Affiche l'erreur dans la console
+      print('Erreur : $e');
     }
   }
 
-  // Fonction de déconnexion
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token'); // Supprime le token de session
+    await prefs.remove('token');
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()), // Redirection vers l'écran de connexion
+      MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
 
@@ -172,7 +168,7 @@ class _HomeContentState extends State<HomeContent> {
             SizedBox(height: 50),
             CircleAvatar(
               radius: 40,
-              backgroundImage: AssetImage('../assets/profile.jpg'), // Image de profil
+              backgroundImage: AssetImage('../assets/profile.jpg'),
             ),
             SizedBox(height: 20),
             Divider(color: Colors.white54),
@@ -182,14 +178,14 @@ class _HomeContentState extends State<HomeContent> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen()), // Navigue vers l'écran de profil
+                  MaterialPageRoute(builder: (context) => ProfileScreen()),
                 );
               },
             ),
             ListTile(
               leading: Icon(Icons.logout, color: Colors.white),
               title: Text('Déconnexion', style: TextStyle(color: Colors.white)),
-              onTap: _logout, // Déconnexion
+              onTap: _logout,
             ),
           ],
         ),
@@ -197,14 +193,13 @@ class _HomeContentState extends State<HomeContent> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent], // Application du dégradé
+            colors: [Colors.deepPurple, Colors.purpleAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
         child: Stack(
           children: [
-            Container(color: Colors.transparent), // Utilisation de la couleur transparente
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 50),
               child: Column(
@@ -214,16 +209,19 @@ class _HomeContentState extends State<HomeContent> {
                       Builder(
                         builder: (context) => GestureDetector(
                           onTap: () {
-                            Scaffold.of(context).openDrawer(); // Ouvre le menu latéral
+                            Scaffold.of(context).openDrawer();
                           },
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundImage: AssetImage('../assets/profile.jpg'), // Image de profil
+                            backgroundImage: AssetImage('../assets/profile.jpg'),
                           ),
                         ),
                       ),
                       Spacer(),
-                      Text('Dayliho', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(
+                        'Dayliho',
+                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ],
                   ),
                   SizedBox(height: 50),
@@ -233,7 +231,7 @@ class _HomeContentState extends State<HomeContent> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       image: DecorationImage(
-                        image: AssetImage('../assets/home.jpg'), // Image de fond
+                        image: AssetImage('../assets/home.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -241,17 +239,31 @@ class _HomeContentState extends State<HomeContent> {
                   SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: () {},
-                    child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)), // Bouton d'accueil
+                    child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)),
                   ),
                   SizedBox(height: 20),
-                  // Display the list of reservation items
+
+                  // **CARROUSEL DES SÉANCES**
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: seances.length,
-                      itemBuilder: (context, index) {
-                        return ReservationItem(seance: seances[index]);
-                      },
-                    ),
+                    child: seances.isEmpty
+                        ? Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          )
+                        : PageView.builder(
+                            itemCount: seances.length,
+                            controller: PageController(viewportFraction: 0.85),
+                            itemBuilder: (context, index) {
+                              return AnimatedBuilder(
+                                animation: PageController(viewportFraction: 0.85),
+                                builder: (context, child) {
+                                  return Transform.scale(
+                                    scale: 0.9, // Effet de zoom
+                                    child: ReservationItem(seance: seances[index]),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                   ),
                 ],
               ),
