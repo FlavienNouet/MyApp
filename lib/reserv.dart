@@ -3,11 +3,22 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'confirmation.dart';
+import 'check.dart'; // Importer la page check.dart
+import 'erreur.dart'; // Importer la page erreur.dart
 
 class ReservationScreen extends StatelessWidget {
   final dynamic video;
 
   ReservationScreen({required this.video});
+
+  Future<int?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userIdString = prefs.getString('userId'); // Récupérer comme String
+    if (userIdString != null) {
+      return int.tryParse(userIdString); // Convertir en int
+    }
+    return null; // Si l'ID utilisateur est null
+  }
 
   Future<void> bookSeance(int userId, int seanceId, BuildContext context) async {
     final url = Uri.parse('http://localhost:1234/video/bookSeance/$userId/$seanceId');
@@ -32,14 +43,21 @@ class ReservationScreen extends StatelessWidget {
           SnackBar(content: Text('Séance réservée avec succès !')),
         );
 
-        Navigator.push(
+        // Redirection vers la page check.dart
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ConfirmationScreen()),
+          MaterialPageRoute(builder: (context) => CheckPage()), // Vérifiez que CheckPage est bien défini
         );
       } else {
         print("❌ Erreur lors de la réservation (Code ${response.statusCode}) : ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur lors de la réservation : ${response.body}')),
+        );
+
+        // Redirection vers la page erreur.dart en cas d'erreur
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ErreurPage()), // Vérifiez que ErreurPage est bien défini
         );
       }
     } catch (e) {
@@ -47,12 +65,17 @@ class ReservationScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Impossible de se connecter au serveur. Vérifiez votre connexion.')),
       );
+
+      // Redirection vers la page erreur.dart en cas d'exception
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ErreurPage()), // Vérifiez que ErreurPage est bien défini
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    int idUtilisateur = 1; // Remplace avec l'ID utilisateur réel
     int idSeance = video['id'];
 
     return Scaffold(
@@ -94,7 +117,14 @@ class ReservationScreen extends StatelessWidget {
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
-                      await bookSeance(idUtilisateur, idSeance, context);
+                      int? idUtilisateur = await getUserId();
+                      if (idUtilisateur != null) {
+                        await bookSeance(idUtilisateur, idSeance, context);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur : utilisateur non identifié')),
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
