@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> fetchUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    String? userId = prefs.getString('userId');
+    int? userId = prefs.getInt('userId');  // Récupérer l'ID utilisateur en tant qu'int
 
     if (token == null || userId == null) {
       setState(() {
@@ -36,7 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:1234/user/getUserById?id=$userId'),
+        Uri.parse('http://localhost:1234/user/getUserById?id=$userId'), // L'ID utilisateur est maintenant un entier
         headers: {'Authorization': 'Bearer $token'},
       );
 

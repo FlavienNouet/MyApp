@@ -13,11 +13,8 @@ class ReservationScreen extends StatelessWidget {
 
   Future<int?> getUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userIdString = prefs.getString('userId'); // Récupérer comme String
-    if (userIdString != null) {
-      return int.tryParse(userIdString); // Convertir en int
-    }
-    return null; // Si l'ID utilisateur est null
+    int? userId = prefs.getInt('userId'); // Récupérer comme int
+    return userId; // Retourne un int? potentiellement nul
   }
 
   Future<void> bookSeance(int userId, int seanceId, BuildContext context) async {

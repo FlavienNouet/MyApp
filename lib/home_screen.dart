@@ -7,6 +7,7 @@ import 'reserv.dart'; // Import des écrans
 import 'main.dart'; // Assurez-vous d'importer votre écran principal
 import 'profile.dart'; // Assurez-vous d'importer votre écran de profil
 import 'confirmation.dart';
+import 'détails.dart';
 
 // Ecran Principal avec la navigation
 void main() {
@@ -85,17 +86,15 @@ class ReservationItem extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
             ),
             SizedBox(height: 8),
-      
-          
 
             // **Bouton Voir le détail**
             ElevatedButton(
               onPressed: () {
-                // Navigation vers la page de confirmation avec les détails de la séance
+                // Navigation vers la page de détails en passant les données de la séance
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ConfirmationScreen(),
+                    builder: (context) => DetailsScreen(seance: seance),
                   ),
                 );
               },
@@ -131,7 +130,7 @@ class _HomeContentState extends State<HomeContent> {
   Future<void> fetchSeances() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('userId');
+      int? userId = prefs.getInt('userId'); // Récupération de l'ID utilisateur en tant qu'entier
 
       if (userId == null) {
         throw Exception('Utilisateur non trouvé');
@@ -156,6 +155,7 @@ class _HomeContentState extends State<HomeContent> {
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('userId');  // Enlever aussi l'ID de l'utilisateur
 
     Navigator.pushReplacement(
       context,

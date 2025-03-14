@@ -13,14 +13,14 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   Future<List<dynamic>> fetchBookedSeances() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('userId');
+      int? userId = prefs.getInt('userId'); // Utilisation de getInt pour récupérer un int depuis SharedPreferences
 
       if (userId == null) {
         throw Exception('ID utilisateur introuvable');
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
+        Uri.parse('http://localhost:1234/video/getBookedSeances/${userId.toString()}'), // Conversion de userId en String pour l'URL
       );
 
       if (response.statusCode == 200) {

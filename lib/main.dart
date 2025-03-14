@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Stocke le token avec SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
-        await prefs.setInt('userId', data['userId']);
+        await prefs.setInt('userId', data['userId']);  // Sauvegarde l'ID utilisateur en tant qu'entier
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Connexion réussie')),
