@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
   String? errorMessage;
+  bool _obscureText = true; // Ajout pour gérer l'affichage du mot de passe
 
   Future<void> login() async {
     setState(() {
@@ -156,14 +157,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 15),
                   TextField(
                     controller: passwordController,
+                    obscureText: _obscureText, // Gestion de l'affichage
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.lock, color: Colors.purple),
                       labelText: 'Mot de passe',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureText ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.purple,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureText = !_obscureText; // Toggle du texte masqué/affiché
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
                   ),
                   SizedBox(height: 10),
                   if (errorMessage != null)
