@@ -137,7 +137,7 @@ class _HomeContentState extends State<HomeContent> {
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
+        Uri.parse('http://10.0.2.2:1234/video/getBookedSeances/$userId'),
       );
 
       if (response.statusCode == 200) {
@@ -173,7 +173,7 @@ class _HomeContentState extends State<HomeContent> {
             SizedBox(height: 50),
             CircleAvatar(
               radius: 40,
-              backgroundImage: AssetImage('../assets/profile.jpg'),
+              backgroundImage: AssetImage('assets/profile.jpg'),
             ),
             SizedBox(height: 20),
             Divider(color: Colors.white54),
@@ -218,7 +218,7 @@ class _HomeContentState extends State<HomeContent> {
                           },
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundImage: AssetImage('../assets/profile.jpg'),
+                            backgroundImage: AssetImage('assets/profile.jpg'),
                           ),
                         ),
                       ),
@@ -236,7 +236,7 @@ class _HomeContentState extends State<HomeContent> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       image: DecorationImage(
-                        image: AssetImage('../assets/home.jpg'),
+                        image: AssetImage('assets/home.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),

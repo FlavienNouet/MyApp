@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:1234/user/checkUser'), // Remplace par l'URL de ton backend
+        Uri.parse('http://10.0.2.2:1234/user/checkUser'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': emailController.text,

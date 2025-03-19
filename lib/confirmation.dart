@@ -20,7 +20,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:1234/video/getBookedSeances/${userId.toString()}'), // Conversion de userId en String pour l'URL
+        Uri.parse('http://10.0.2.2:1234/video/getBookedSeances/${userId.toString()}'), // Conversion de userId en String pour l'URL
       );
 
       if (response.statusCode == 200) {

@@ -36,7 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:1234/user/getUserById?id=$userId'), // L'ID utilisateur est maintenant un entier
+        Uri.parse('http://10.0.2.2:1234/user/getUserById?id=$userId'), // L'ID utilisateur est maintenant un entier
         headers: {'Authorization': 'Bearer $token'},
       );
 
