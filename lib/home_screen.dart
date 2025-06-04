@@ -419,6 +419,16 @@ class _HomeContentState extends State<HomeContent> {
                       );
                     },
                   ),
+                  _buildDrawerItem(
+                    icon: Icons.settings_rounded,
+                    title: 'Paramètres',
+                    onTap: () {},
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.help_outline_rounded,
+                    title: 'Aide',
+                    onTap: () {},
+                  ),
                   Divider(height: 32),
                   _buildDrawerItem(
                     icon: Icons.logout_rounded,
