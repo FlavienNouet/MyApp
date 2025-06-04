@@ -455,30 +455,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               ),
                               
                               SizedBox(height: 20),
-                              
-                              // Lien mot de passe oublié
-                              TextButton(
-                                onPressed: () {
-                                  // Action pour mot de passe oublié
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Fonctionnalité bientôt disponible'),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  'Mot de passe oublié ?',
-                                  style: TextStyle(
-                                    color: AppColors.secondary,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),

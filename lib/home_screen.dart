@@ -222,21 +222,6 @@ class ReservationItem extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.schedule_rounded,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        seance['date'] ?? 'Date non définie',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Spacer(),
-                      Icon(
                         Icons.location_on_rounded,
                         size: 16,
                         color: AppColors.textSecondary,
@@ -418,16 +403,6 @@ class _HomeContentState extends State<HomeContent> {
                         MaterialPageRoute(builder: (context) => ProfileScreen()),
                       );
                     },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.settings_rounded,
-                    title: 'Paramètres',
-                    onTap: () {},
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.help_outline_rounded,
-                    title: 'Aide',
-                    onTap: () {},
                   ),
                   Divider(height: 32),
                   _buildDrawerItem(
@@ -687,24 +662,6 @@ class _HomeContentState extends State<HomeContent> {
               fontSize: 14,
               color: AppColors.textSecondary,
               height: 1.4,
-            ),
-          ),
-          SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              // Navigation vers la page de réservation
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Text(
-              'Explorer les séances',
-              style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
