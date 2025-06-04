@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_screen.dart'; // Assurez-vous que ce fichier existe avec HomeScreen()
+import 'home_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -35,6 +35,24 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primaryColor: Color(0xFF1A237E),
+        scaffoldBackgroundColor: Colors.grey[100],
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(0xFF1A237E),
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xFF1A237E),
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ),
       home: isLoggedIn ? HomeScreen() : LoginScreen(),
     );
   }
@@ -50,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
   String? errorMessage;
-  bool _obscureText = true; // Ajout pour gérer l'affichage du mot de passe
+  bool _obscureText = true;
 
   Future<void> login() async {
     setState(() {
@@ -74,17 +92,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-
-        // Stocke le token avec SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
-        await prefs.setInt('userId', data['userId']);  // Sauvegarde l'ID utilisateur en tant qu'entier
+        await prefs.setInt('userId', data['userId']);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connexion réussie')),
+          SnackBar(
+            content: Text('Connexion réussie'),
+            backgroundColor: Colors.green,
+          ),
         );
 
-        // Redirige vers la page d'accueil
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -108,23 +126,26 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF1A237E),
+              Color(0xFF3949AB),
+            ],
           ),
         ),
         child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24.0),
             child: Container(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
+                    color: Colors.black12,
+                    blurRadius: 15,
                     offset: Offset(0, 5),
                   ),
                 ],
@@ -132,76 +153,106 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock, size: 80, color: Colors.purple),
-                  SizedBox(height: 10),
+                  Image.asset(
+                    'assets/home.jpg',
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.cover,
+                  ),
+                  SizedBox(height: 24),
                   Text(
-                    'Connexion',
+                    'DAYLIHO FITNESS',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.purple,
+                      color: Color(0xFF1A237E),
+                      letterSpacing: 1.5,
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 32),
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.email, color: Colors.purple),
                       labelText: 'Email',
+                      prefixIcon: Icon(Icons.email, color: Color(0xFF1A237E)),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF1A237E)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF1A237E), width: 2),
                       ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  SizedBox(height: 15),
+                  SizedBox(height: 20),
                   TextField(
                     controller: passwordController,
-                    obscureText: _obscureText, // Gestion de l'affichage
+                    obscureText: _obscureText,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.lock, color: Colors.purple),
                       labelText: 'Mot de passe',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      prefixIcon: Icon(Icons.lock, color: Color(0xFF1A237E)),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureText ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.purple,
+                          color: Color(0xFF1A237E),
                         ),
                         onPressed: () {
                           setState(() {
-                            _obscureText = !_obscureText; // Toggle du texte masqué/affiché
+                            _obscureText = !_obscureText;
                           });
                         },
                       ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF1A237E)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Color(0xFF1A237E), width: 2),
+                      ),
                     ),
                   ),
-                  SizedBox(height: 10),
                   if (errorMessage != null)
-                    Text(
-                      errorMessage!,
-                      style: TextStyle(color: Colors.red, fontSize: 14),
+                    Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Text(
+                        errorMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  SizedBox(height: 20),
-                  isLoading
-                      ? CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Text(
-                            'Se connecter',
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
+                  SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : login,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                  SizedBox(height: 10),
+                      ),
+                      child: isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'SE CONNECTER',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                    ),
+                  ),
                 ],
               ),
             ),

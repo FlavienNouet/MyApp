@@ -3,19 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'historique.dart';
-import 'reserv.dart'; // Import des écrans
-import 'main.dart'; // Assurez-vous d'importer votre écran principal
-import 'profile.dart'; // Assurez-vous d'importer votre écran de profil
+import 'reserv.dart';
+import 'main.dart';
+import 'profile.dart';
 import 'confirmation.dart';
 import 'détails.dart';
-
-// Ecran Principal avec la navigation
-void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: HomeScreen(),
-  ));
-}
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -23,32 +15,40 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 1; // Index de la page actuellement affichée
+  int _currentIndex = 1;
 
-  // Liste des pages à afficher dans la navigation
   final List<Widget> _pages = [
     HistoryScreen(),
     HomeContent(),
-    ConfirmationScreen(), // Ajout de la page confirmation ici
+    ConfirmationScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex], // Affiche la page correspondant à l'index courant
+      body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Color(0xFF1A237E),
         selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.white60,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Séances'),
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
-          BottomNavigationBarItem(icon: Icon(Icons.check_circle), label: 'Mes Réservations'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: 'Séances',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle),
+            label: 'Réservations',
+          ),
         ],
-        currentIndex: _currentIndex, // Index actuel dans la barre de navigation
+        currentIndex: _currentIndex,
         onTap: (int index) {
           setState(() {
-            _currentIndex = index; // Met à jour l'index lorsqu'un élément est sélectionné
+            _currentIndex = index;
           });
         },
       ),
@@ -64,46 +64,74 @@ class ReservationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 8),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.black),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black54, blurRadius: 4, spreadRadius: 2),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
-      child: Center(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // **Titre en haut**
-            Text(
-              seance['titre'] ?? 'Titre indisponible',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
-            ),
-            SizedBox(height: 8),
-
-            // **Bouton Voir le détail**
-            ElevatedButton(
-              onPressed: () {
-                // Navigation vers la page de détails en passant les données de la séance
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsScreen(seance: seance),
-                  ),
-                );
-              },
-              child: Text("Voir le détail"),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            Container(
+              color: Color(0xFF1A237E),
+              padding: EdgeInsets.all(16),
+              child: Text(
+                seance['titre'] ?? 'Titre indisponible',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(
+                    seance['description'] ?? 'Description indisponible',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailsScreen(seance: seance),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF1A237E),
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      "Voir le détail",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -119,7 +147,7 @@ class HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<HomeContent> {
-  late List<dynamic> seances = []; // Liste des séances
+  late List<dynamic> seances = [];
 
   @override
   void initState() {
@@ -130,7 +158,7 @@ class _HomeContentState extends State<HomeContent> {
   Future<void> fetchSeances() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      int? userId = prefs.getInt('userId'); // Récupération de l'ID utilisateur en tant qu'entier
+      int? userId = prefs.getInt('userId');
 
       if (userId == null) {
         throw Exception('Utilisateur non trouvé');
@@ -155,7 +183,7 @@ class _HomeContentState extends State<HomeContent> {
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
-    await prefs.remove('userId');  // Enlever aussi l'ID de l'utilisateur
+    await prefs.remove('userId');
 
     Navigator.pushReplacement(
       context,
@@ -167,113 +195,120 @@ class _HomeContentState extends State<HomeContent> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(
-        backgroundColor: Colors.grey[850],
-        child: Column(
-          children: [
-            SizedBox(height: 50),
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: AssetImage('assets/profile.jpg'),
-            ),
-            SizedBox(height: 20),
-            Divider(color: Colors.white54),
-            ListTile(
-              leading: Icon(Icons.person, color: Colors.white),
-              title: Text('Profile', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout, color: Colors.white),
-              title: Text('Déconnexion', style: TextStyle(color: Colors.white)),
-              onTap: _logout,
-            ),
-          ],
+        child: Container(
+          color: Color(0xFF1A237E),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage('assets/profile.jpg'),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'DAYLIHO FITNESS',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.person, color: Colors.white),
+                title: Text('Profile', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ProfileScreen()),
+                  );
+                },
+              ),
+              Divider(color: Colors.white24),
+              ListTile(
+                leading: Icon(Icons.logout, color: Colors.white),
+                title: Text('Déconnexion', style: TextStyle(color: Colors.white)),
+                onTap: _logout,
+              ),
+            ],
+          ),
         ),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF1A237E),
+              Color(0xFF3949AB),
+            ],
           ),
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 50),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Builder(
-                        builder: (context) => GestureDetector(
-                          onTap: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundImage: AssetImage('assets/profile.jpg'),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Builder(
+                      builder: (context) => GestureDetector(
+                        onTap: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundImage: AssetImage('assets/profile.jpg'),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'DAYLIHO FITNESS',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ),
-                      Spacer(),
-                      Text(
-                        'Dayliho',
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 50),
-                  Container(
-                    width: 300,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      image: DecorationImage(
-                        image: AssetImage('assets/home.jpg'),
-                        fit: BoxFit.cover,
-                      ),
                     ),
-                  ),
-                  SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Bienvenue', style: TextStyle(fontSize: 22, color: Colors.white)),
-                  ),
-                  SizedBox(height: 20),
-
-                  // **CARROUSEL DES SÉANCES**
-                  Expanded(
-                    child: seances.isEmpty
-                        ? Center(
-                            child: CircularProgressIndicator(color: Colors.white),
-                          )
-                        : PageView.builder(
-                            itemCount: seances.length,
-                            controller: PageController(viewportFraction: 0.85),
-                            itemBuilder: (context, index) {
-                              return AnimatedBuilder(
-                                animation: PageController(viewportFraction: 0.85),
-                                builder: (context, child) {
-                                  return Transform.scale(
-                                    scale: 0.9, // Effet de zoom
-                                    child: ReservationItem(seance: seances[index]),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                    SizedBox(width: 40),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: seances.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : PageView.builder(
+                        itemCount: seances.length,
+                        controller: PageController(viewportFraction: 0.9),
+                        itemBuilder: (context, index) {
+                          return AnimatedBuilder(
+                            animation: PageController(viewportFraction: 0.9),
+                            builder: (context, child) {
+                              return ReservationItem(seance: seances[index]);
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
