@@ -24,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> fetchUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    int? userId = prefs.getInt('userId');  // Récupérer l'ID utilisateur en tant qu'int
+    int? userId = prefs.getInt('userId');
 
     if (token == null || userId == null) {
       setState(() {
@@ -36,18 +36,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:1234/user/getUserById?id=$userId'), // L'ID utilisateur est maintenant un entier
+        Uri.parse('http://localhost:1234/user/getUserById?id=$userId'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      // Imprimer la réponse brute pour le débogage
       print('Réponse de l\'API: ${response.body}');
 
-      // Vérification du statut HTTP
       if (response.statusCode == 200) {
         final Map<String, dynamic> userData = jsonDecode(response.body);
 
-        // Vérification que la réponse contient bien les données utilisateur
         if (userData.isNotEmpty) {
           String nom = userData['nom'] ?? 'Nom non renseigné';
           String prenom = userData['prenom'] ?? 'Prénom non renseigné';
@@ -83,94 +80,204 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text('Profil'),
-        backgroundColor: Colors.deepPurple,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.deepPurple, Colors.purpleAccent],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+        title: Text(
+          'Profil Utilisateur',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        child: Center(
-          child: isLoading
-              ? CircularProgressIndicator()
-              : errorMessage.isNotEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(20.0),
+        centerTitle: true,
+        backgroundColor: Colors.blue[800],
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          children: [
+            if (isLoading)
+              Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[800]!),
+                ),
+              )
+            else if (errorMessage.isNotEmpty)
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red[800]),
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         errorMessage,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : Container(
-                      width: 350,
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Informations de l\'utilisateur',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          buildDetailRow(Icons.person, username),
-                          buildDetailRow(Icons.email, email),
-                          buildDetailRow(Icons.security, role),
-                          SizedBox(height: 25),
-                        ],
+                        style: TextStyle(color: Colors.red[800]),
                       ),
                     ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: [
+                  // Carte de profil
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // En-tête avec avatar
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[800],
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(12),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: Colors.blue[800],
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                username,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                role,
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Détails
+                        Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Column(
+                            children: [
+                              _buildInfoRow(
+                                icon: Icons.email,
+                                label: 'Email',
+                                value: email,
+                              ),
+                              SizedBox(height: 16),
+                              _buildInfoRow(
+                                icon: Icons.verified_user,
+                                label: 'Rôle',
+                                value: role,
+                              ),
+                              SizedBox(height: 24),
+                              Divider(height: 1),
+                              SizedBox(height: 16),
+
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                ],
+              ),
+          ],
         ),
       ),
     );
   }
 
-  Widget buildDetailRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.deepPurple, size: 24),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text.isNotEmpty ? text : 'Non renseigné',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: Colors.blue[800],
+          size: 24,
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
               ),
-            ),
+              SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.blue[800],
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 }
