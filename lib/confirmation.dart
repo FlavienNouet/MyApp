@@ -89,6 +89,191 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> with TickerProv
     }
   }
 
+  // Fonction pour supprimer une réservation
+  Future<void> _deleteReservation(int seanceId) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int? userId = prefs.getInt('userId');
+
+      if (userId == null) {
+        throw Exception('Utilisateur non connecté');
+      }
+
+      final response = await http.delete(
+        Uri.parse('http://localhost:1234/video/deleteReservation/$userId/$seanceId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        // Suppression réussie, actualiser la liste
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Réservation supprimée avec succès'),
+              ],
+            ),
+            backgroundColor: Color(0xFF27AE60),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        
+        // Recharger les données
+        await _refreshData();
+      } else {
+        throw Exception('Erreur lors de la suppression de la réservation');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text('Erreur: ${e.toString().replaceAll('Exception: ', '')}'),
+              ),
+            ],
+          ),
+          backgroundColor: Color(0xFFE74C3C),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Fonction pour afficher la boîte de dialogue de confirmation
+  Future<void> _showDeleteConfirmationDialog(dynamic seance) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFF39C12),
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Text(
+                'Confirmer la suppression',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Êtes-vous sûr de vouloir supprimer cette réservation ?',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF6C757D),
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Color(0xFFE9ECEF),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      seance['titre'] ?? 'Titre indisponible',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2C3E50),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Lieu: ${seance['lieu'] ?? 'Non spécifié'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6C757D),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Cette action est irréversible.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFE74C3C),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF6C757D),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: Text(
+                'Annuler',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteReservation(seance['id']);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFE74C3C),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Supprimer',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -357,6 +542,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> with TickerProv
                   seance: _bookedSeances[index],
                   index: index,
                   animationController: _animationController,
+                  onDelete: () => _showDeleteConfirmationDialog(_bookedSeances[index]),
                 );
               },
             ),
@@ -371,11 +557,13 @@ class ReservationItem extends StatelessWidget {
   final dynamic seance;
   final int index;
   final AnimationController animationController;
+  final VoidCallback onDelete;
 
   ReservationItem({
     required this.seance,
     required this.index,
     required this.animationController,
+    required this.onDelete,
   });
 
   @override
@@ -522,35 +710,66 @@ class ReservationItem extends StatelessWidget {
               
               SizedBox(height: 16),
               
-              // Action
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () {
-                    _showDetailsDialog(context);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Color(0xFF3498DB),
-                    side: BorderSide(color: Color(0xFF3498DB)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              // Actions
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _showDetailsDialog(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Color(0xFF3498DB),
+                        side: BorderSide(color: Color(0xFF3498DB)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.info_outline, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            'Détails',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        'Voir les détails',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onDelete,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFE74C3C),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        padding: EdgeInsets.symmetric(vertical: 12),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.delete_outline, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            'Supprimer',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -636,6 +855,4 @@ class ReservationItem extends StatelessWidget {
       },
     );
   }
-
-
 }
