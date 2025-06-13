@@ -40,7 +40,7 @@ class _HistoryScreenState extends State<HistoryScreen> with TickerProviderStateM
 
   Future<void> _fetchVideos() async {
     try {
-      final response = await http.get(Uri.parse('http://10.0.2.2:1234/video/getVideos'));
+      final response = await http.get(Uri.parse('http://localhost:1234/video/getVideos'));
       if (response.statusCode == 200) {
         setState(() {
           _videos = json.decode(response.body);

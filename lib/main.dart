@@ -194,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:1234/user/checkUser'),
+        Uri.parse('http://localhost:1234/user/checkUser'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'email': emailController.text.trim(),

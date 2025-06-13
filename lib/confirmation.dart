@@ -71,7 +71,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> with TickerProv
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:1234/video/getBookedSeances/${userId.toString()}'),
+        Uri.parse('http://localhost:1234/video/getBookedSeances/${userId.toString()}'),
       );
 
       if (response.statusCode == 200) {
@@ -100,7 +100,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> with TickerProv
       }
 
       final response = await http.delete(
-        Uri.parse('http://10.0.2.2:1234/video/deleteReservation/$userId/$seanceId'),
+        Uri.parse('http://localhost:1234/video/deleteReservation/$userId/$seanceId'),
         headers: {'Content-Type': 'application/json'},
       );
 

@@ -312,7 +312,7 @@ class _HomeContentState extends State<HomeContent> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:1234/video/getBookedSeances/$userId'),
+        Uri.parse('http://localhost:1234/video/getBookedSeances/$userId'),
       );
 
       if (response.statusCode == 200) {
