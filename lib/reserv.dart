@@ -17,7 +17,7 @@ class ReservationScreen extends StatelessWidget {
   }
 
   Future<void> bookSeance(int userId, int seanceId, BuildContext context) async {
-    final url = Uri.parse('http://localhost:1234/video/bookSeance/$userId/$seanceId');
+    final url = Uri.parse('http://10.0.2.2:1234/video/bookSeance/$userId/$seanceId');
 
     try {
       print("🔹 Tentative de réservation pour user:$userId, séance:$seanceId");
