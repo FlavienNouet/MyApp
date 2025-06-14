@@ -1,7 +1,7 @@
-// Routes pour la gestion des vidéos/séances
+// Routes pour la gestion des vidéos/séances avec gestion automatique des places
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database'); // Votre configuration de base de données
+const db = require('../config/database');
 
 // Route pour récupérer toutes les séances disponibles (avec places restantes)
 router.get('/getVideos', async (req, res) => {
@@ -12,9 +12,8 @@ router.get('/getVideos', async (req, res) => {
              (v.nombrePlaces - COALESCE(COUNT(r.id), 0)) as places_restantes
       FROM videos v
       LEFT JOIN reservations r ON v.id = r.seance_id
-      WHERE v.nombrePlaces > COALESCE(COUNT(r.id), 0)
-      AND v.dateFin >= CURDATE()
-      GROUP BY v.id
+      WHERE v.dateFin >= CURDATE()
+      GROUP BY v.id, v.titre, v.description, v.dateDebut, v.dateFin, v.lieu, v.nombrePlaces
       HAVING places_restantes > 0
       ORDER BY v.dateDebut ASC
     `;
@@ -30,30 +29,31 @@ router.get('/getVideos', async (req, res) => {
   }
 });
 
-// Route pour réserver une séance avec vérification des places
+// Route pour réserver une séance avec vérification stricte des places
 router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
   const { userId, seanceId } = req.params;
+  let connection;
   
   try {
     // Commencer une transaction pour éviter les conditions de course
-    await db.beginTransaction();
+    connection = await db.beginTransaction();
     
     // Vérifier si l'utilisateur existe
-    const [userCheck] = await db.execute(
+    const [userCheck] = await connection.execute(
       'SELECT id FROM users WHERE id = ?', 
       [userId]
     );
     
     if (userCheck.length === 0) {
-      await db.rollback();
+      await db.rollback(connection);
       return res.status(404).json({
         success: false,
         message: 'Utilisateur non trouvé'
       });
     }
     
-    // Vérifier si la séance existe et récupérer les informations
-    const [seanceCheck] = await db.execute(`
+    // Vérifier la séance avec un verrou pour éviter les réservations simultanées
+    const [seanceCheck] = await connection.execute(`
       SELECT v.*, 
              COALESCE(COUNT(r.id), 0) as places_reservees,
              (v.nombrePlaces - COALESCE(COUNT(r.id), 0)) as places_restantes
@@ -61,10 +61,11 @@ router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
       LEFT JOIN reservations r ON v.id = r.seance_id
       WHERE v.id = ? AND v.dateFin >= CURDATE()
       GROUP BY v.id
+      FOR UPDATE
     `, [seanceId]);
     
     if (seanceCheck.length === 0) {
-      await db.rollback();
+      await db.rollback(connection);
       return res.status(404).json({
         success: false,
         message: 'Séance non trouvée ou expirée'
@@ -75,7 +76,7 @@ router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
     
     // Vérifier s'il reste des places disponibles
     if (seance.places_restantes <= 0) {
-      await db.rollback();
+      await db.rollback(connection);
       return res.status(400).json({
         success: false,
         message: 'Cette séance est complète, aucune place disponible'
@@ -83,13 +84,13 @@ router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
     }
     
     // Vérifier si l'utilisateur a déjà réservé cette séance
-    const [existingReservation] = await db.execute(
+    const [existingReservation] = await connection.execute(
       'SELECT id FROM reservations WHERE user_id = ? AND seance_id = ?',
       [userId, seanceId]
     );
     
     if (existingReservation.length > 0) {
-      await db.rollback();
+      await db.rollback(connection);
       return res.status(400).json({
         success: false,
         message: 'Vous avez déjà réservé cette séance'
@@ -97,13 +98,13 @@ router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
     }
     
     // Créer la réservation
-    const [insertResult] = await db.execute(
+    const [insertResult] = await connection.execute(
       'INSERT INTO reservations (user_id, seance_id, date_reservation) VALUES (?, ?, NOW())',
       [userId, seanceId]
     );
     
-    // Vérifier si la séance est maintenant complète
-    const [updatedSeance] = await db.execute(`
+    // Vérifier le nouveau nombre de places après insertion
+    const [updatedSeance] = await connection.execute(`
       SELECT v.nombrePlaces,
              COALESCE(COUNT(r.id), 0) as places_reservees
       FROM videos v
@@ -112,30 +113,33 @@ router.post('/bookSeance/:userId/:seanceId', async (req, res) => {
       GROUP BY v.id
     `, [seanceId]);
     
-    const isSeanceComplete = updatedSeance[0].places_reservees >= updatedSeance[0].nombrePlaces;
+    const placesRestantes = updatedSeance[0].nombrePlaces - updatedSeance[0].places_reservees;
+    const isSeanceComplete = placesRestantes <= 0;
     
-    // Optionnel : Marquer la séance comme complète dans la base de données
+    // Marquer la séance comme complète si nécessaire
     if (isSeanceComplete) {
-      await db.execute(
+      await connection.execute(
         'UPDATE videos SET statut = "complete" WHERE id = ?',
         [seanceId]
       );
     }
     
     // Valider la transaction
-    await db.commit();
+    await db.commit(connection);
     
     res.status(201).json({
       success: true,
       message: 'Réservation effectuée avec succès',
       reservationId: insertResult.insertId,
       seanceComplete: isSeanceComplete,
-      placesRestantes: updatedSeance[0].nombrePlaces - updatedSeance[0].places_reservees
+      placesRestantes: placesRestantes
     });
     
   } catch (error) {
     // Annuler la transaction en cas d'erreur
-    await db.rollback();
+    if (connection) {
+      await db.rollback(connection);
+    }
     console.error('Erreur lors de la réservation:', error);
     res.status(500).json({
       success: false,
@@ -175,18 +179,19 @@ router.get('/getBookedSeances/:userId', async (req, res) => {
 // Route pour supprimer une réservation
 router.delete('/deleteReservation/:userId/:seanceId', async (req, res) => {
   const { userId, seanceId } = req.params;
+  let connection;
   
   try {
-    await db.beginTransaction();
+    connection = await db.beginTransaction();
     
     // Vérifier que la réservation existe
-    const [reservationCheck] = await db.execute(
+    const [reservationCheck] = await connection.execute(
       'SELECT id FROM reservations WHERE user_id = ? AND seance_id = ?',
       [userId, seanceId]
     );
     
     if (reservationCheck.length === 0) {
-      await db.rollback();
+      await db.rollback(connection);
       return res.status(404).json({
         success: false,
         message: 'Réservation non trouvée'
@@ -194,18 +199,18 @@ router.delete('/deleteReservation/:userId/:seanceId', async (req, res) => {
     }
     
     // Supprimer la réservation
-    await db.execute(
+    await connection.execute(
       'DELETE FROM reservations WHERE user_id = ? AND seance_id = ?',
       [userId, seanceId]
     );
     
-    // Remettre la séance comme disponible si elle était marquée comme complète
-    await db.execute(
+    // Remettre la séance comme disponible
+    await connection.execute(
       'UPDATE videos SET statut = "disponible" WHERE id = ?',
       [seanceId]
     );
     
-    await db.commit();
+    await db.commit(connection);
     
     res.status(200).json({
       success: true,
@@ -213,7 +218,9 @@ router.delete('/deleteReservation/:userId/:seanceId', async (req, res) => {
     });
     
   } catch (error) {
-    await db.rollback();
+    if (connection) {
+      await db.rollback(connection);
+    }
     console.error('Erreur lors de la suppression:', error);
     res.status(500).json({
       success: false,
