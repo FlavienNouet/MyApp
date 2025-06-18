@@ -8,6 +8,7 @@ import 'main.dart';
 import 'profile.dart';
 import 'confirmation.dart';
 import 'détails.dart';
+import 'change_password.dart';
 
 // Couleurs et thème professionnel
 class AppColors {
@@ -401,6 +402,16 @@ class _HomeContentState extends State<HomeContent> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => ProfileScreen()),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.lock_reset_rounded,
+                    title: 'Modifier le mot de passe',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
                       );
                     },
                   ),
